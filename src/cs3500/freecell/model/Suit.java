@@ -3,7 +3,8 @@ package cs3500.freecell.model;
 import java.util.Objects;
 
 /**
- * Represents the Suit of a card.
+ * Represents a card's suit and can determine its color;
+ * must be of the type spade, heart, club, or diamond.
  */
 public class Suit {
   private final SuitType suit;

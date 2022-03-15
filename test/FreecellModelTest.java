@@ -9,12 +9,13 @@ import java.util.Random;
 import cs3500.freecell.model.Card;
 import cs3500.freecell.model.FreecellModel;
 import cs3500.freecell.model.PileType;
+import cs3500.freecell.model.Rank;
 import cs3500.freecell.model.SimpleFreecellModel;
 import cs3500.freecell.model.Suit;
 import cs3500.freecell.model.SuitType;
-import cs3500.freecell.view.FreecellTextView;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * JUnit test cases for the freecell model.
@@ -79,8 +80,8 @@ public class FreecellModelTest {
 
     test = basic.getDeck();
     assertEquals(52, test.size());
-    assertEquals(new Card('A', heart), test.get(0));
-    assertEquals(new Card('K', club), test.get(51));
+    assertEquals(new Card(Rank.ACE, heart), test.get(0));
+    assertEquals(new Card(Rank.KING, club), test.get(51));
   }
 
   @Test
@@ -104,19 +105,26 @@ public class FreecellModelTest {
     gameOver.startGame(gameOver.getDeck(), 6, 2, false); //restart
     assertEquals(false, gameOver.isGameOver());
 
+    //making sure the deck was shuffled
+    FreecellModel shuffleMe = new SimpleFreecellModel();
+    shuffleMe.startGame(shuffleMe.getDeck(), 6, 4, true);
+    assertNotEquals(shuffleMe.getCascadeCardAt(0,0),
+            new Card(Rank.ACE, heart));
+    assertNotEquals(shuffleMe.getCascadeCardAt(3,0),
+            new Card(Rank.ACE, club));
 
     //not enough cascade piles
     try {
       basic.startGame(basic.getDeck(), 3, 4, true);
-    } catch (Exception e) {
+    } catch (IllegalArgumentException e) {
       new IllegalArgumentException("There must be at least 4 cascade piles.");
     }
 
     //not enough open piles
     try {
       basic.startGame(basic.getDeck(), 10, 0, true);
-    } catch (Exception e) {
-      new IllegalArgumentException("There must be between 1 and 4 open piles.");
+    } catch (IllegalArgumentException e) {
+      new IllegalArgumentException("There must be at least 1 open pile.");
     }
   }
 
@@ -124,7 +132,7 @@ public class FreecellModelTest {
   public void testStartGameBadDeck() {
     List<Card> bad = basic.getDeck();
     bad.remove(51);
-    bad.add(new Card('0', spade));
+    bad.add(new Card(Rank.TEN, spade));
 
     assertEquals(52, bad.size());
 
@@ -132,7 +140,7 @@ public class FreecellModelTest {
     try {
       basic.startGame(bad, 8, 3, false);
     }
-    catch (Exception e) {
+    catch (IllegalArgumentException e) {
       new IllegalArgumentException("Provided deck is invalid.");
     }
 
@@ -140,7 +148,7 @@ public class FreecellModelTest {
     try {
       basic.startGame(new ArrayList<Card>(), 8, 3, false);
     }
-    catch (Exception e) {
+    catch (IllegalArgumentException e) {
       new IllegalArgumentException("Provided deck is invalid.");
     }
   }
@@ -307,21 +315,21 @@ public class FreecellModelTest {
     assertEquals(0, seeded.getNumCardsInFoundationPile(1));
     seeded.move(PileType.CASCADE, 4, 5, PileType.FOUNDATION, 1);
     assertEquals(1, seeded.getNumCardsInFoundationPile(1));
-    assertEquals(new Card('A', diamond), seeded.getFoundationCardAt(1, 0));
+    assertEquals(new Card(Rank.ACE, diamond), seeded.getFoundationCardAt(1, 0));
 
     //VALID! multiple cards from cascade pile to foundation
     big.move(PileType.CASCADE, 39, 0, PileType.FOUNDATION, 0);
     assertEquals(1, big.getNumCardsInFoundationPile(0));
-    assertEquals(new Card('A', club), big.getFoundationCardAt(0, 0));
+    assertEquals(new Card(Rank.ACE, club), big.getFoundationCardAt(0, 0));
     big.move(PileType.CASCADE, 40, 0, PileType.FOUNDATION, 0);
     assertEquals(2, big.getNumCardsInFoundationPile(0));
-    assertEquals(new Card('2', club), big.getFoundationCardAt(0, 1));
+    assertEquals(new Card(Rank.TWO, club), big.getFoundationCardAt(0, 1));
 
     //VALID! from open pile
     seeded.move(PileType.CASCADE, 5, 5, PileType.OPEN, 1);
-    assertEquals(new Card('A', club), seeded.getOpenCardAt(1));
+    assertEquals(new Card(Rank.ACE, club), seeded.getOpenCardAt(1));
     seeded.move(PileType.OPEN, 1, 0, PileType.FOUNDATION, 3);
-    assertEquals(new Card('A', club), seeded.getFoundationCardAt(3, 0));
+    assertEquals(new Card(Rank.ACE, club), seeded.getFoundationCardAt(3, 0));
 
     //INVALID! removing card from FP
     try {
@@ -374,9 +382,6 @@ public class FreecellModelTest {
   public void testNumCardsFP() {
     basic.startGame(basic.getDeck(), 8, 4, true);
 
-    FreecellTextView seededText = new FreecellTextView(seeded);
-    System.out.println(seededText.toString());
-
     assertEquals(0, basic.getNumCardsInFoundationPile(0));
     assertEquals(0, basic.getNumCardsInFoundationPile(1));
     assertEquals(0, basic.getNumCardsInFoundationPile(2));
@@ -397,7 +402,7 @@ public class FreecellModelTest {
     try {
       assertEquals(0, basic.getNumCardsInFoundationPile(4));
     }
-    catch (Exception e) {
+    catch (IllegalArgumentException e) {
       new IllegalArgumentException("Invalid index.");
     }
   }
@@ -432,7 +437,7 @@ public class FreecellModelTest {
     try {
       basic.getNumCardsInCascadePile(10);
     }
-    catch (Exception e) {
+    catch (IllegalArgumentException e) {
       new IllegalArgumentException("Invalid index.");
     }
 
@@ -441,7 +446,7 @@ public class FreecellModelTest {
     try {
       noStart.getNumCardsInCascadePile(0);
     }
-    catch (Exception e) {
+    catch (IllegalStateException e) {
       new IllegalStateException("Game has not started yet!");
     }
   }
@@ -464,7 +469,7 @@ public class FreecellModelTest {
     try {
       basic.getNumCardsInOpenPile(5);
     }
-    catch (Exception e) {
+    catch (IllegalArgumentException e) {
       new IllegalArgumentException("Invalid index.");
     }
 
@@ -473,7 +478,7 @@ public class FreecellModelTest {
     try {
       noStart.getNumCardsInOpenPile(0);
     }
-    catch (Exception e) {
+    catch (IllegalStateException e) {
       new IllegalStateException("Game has not started yet!");
     }
 
@@ -491,15 +496,7 @@ public class FreecellModelTest {
     try {
       basic.startGame(basic.getDeck(), 8, 0, true);
     }
-    catch (Exception e) {
-      new IllegalArgumentException("There must be between 1 and 4 open piles");
-    }
-
-    //too many open piles
-    try {
-      basic.startGame(basic.getDeck(), 8, 9, true);
-    }
-    catch (Exception e) {
+    catch (IllegalArgumentException e) {
       new IllegalArgumentException("There must be between 1 and 4 open piles");
     }
   }
@@ -507,15 +504,15 @@ public class FreecellModelTest {
   @Test
   public void testGetFC() {
     big.move(PileType.CASCADE, 39, 0, PileType.FOUNDATION, 0);
-    assertEquals(new Card('A', club), big.getFoundationCardAt(0, 0));
+    assertEquals(new Card(Rank.ACE, club), big.getFoundationCardAt(0, 0));
     big.move(PileType.CASCADE, 40, 0, PileType.FOUNDATION, 0);
-    assertEquals(new Card('2', club), big.getFoundationCardAt(0, 1));
+    assertEquals(new Card(Rank.TWO, club), big.getFoundationCardAt(0, 1));
 
     //pile doesn't exist
     try {
       big.getFoundationCardAt(5, 0);
     }
-    catch (Exception e) {
+    catch (IllegalArgumentException e) {
       new IllegalArgumentException("Invalid index.");
     }
 
@@ -523,22 +520,22 @@ public class FreecellModelTest {
     try {
       big.getFoundationCardAt(0, 9);
     }
-    catch (Exception e) {
+    catch (IllegalArgumentException e) {
       new IllegalArgumentException("Invalid index.");
     }
   }
 
   @Test
   public void testGetCC() {
-    assertEquals(new Card('K', club), seeded.getCascadeCardAt(0,4));
-    assertEquals(new Card('6', heart), seeded.getCascadeCardAt(6,5));
-    assertEquals(new Card('4', diamond), seeded.getCascadeCardAt(2,0));
+    assertEquals(new Card(Rank.KING, club), seeded.getCascadeCardAt(0,4));
+    assertEquals(new Card(Rank.SIX, heart), seeded.getCascadeCardAt(6,5));
+    assertEquals(new Card(Rank.FOUR, diamond), seeded.getCascadeCardAt(2,0));
 
     //pile doesn't exist
     try {
       seeded.getCascadeCardAt(9, 0);
     }
-    catch (Exception e) {
+    catch (IllegalArgumentException e) {
       new IllegalArgumentException("Invalid index.");
     }
 
@@ -546,7 +543,7 @@ public class FreecellModelTest {
     try {
       seeded.getCascadeCardAt(0, 10);
     }
-    catch (Exception e) {
+    catch (IllegalArgumentException e) {
       new IllegalArgumentException("Invalid index.");
     }
   }
@@ -554,16 +551,16 @@ public class FreecellModelTest {
   @Test
   public void testGetOC() {
     big.move(PileType.CASCADE, 3, 0, PileType.OPEN, 1);
-    assertEquals(new Card('4', heart), big.getOpenCardAt(1));
+    assertEquals(new Card(Rank.FOUR, heart), big.getOpenCardAt(1));
 
     big.move(PileType.CASCADE, 51, 0, PileType.OPEN, 0);
-    assertEquals(new Card('K', club), big.getOpenCardAt(0));
+    assertEquals(new Card(Rank.KING, club), big.getOpenCardAt(0));
 
     //open pile doesn't exist
     try {
       big.getOpenCardAt(5);
     }
-    catch (Exception e) {
+    catch (IllegalArgumentException e) {
       new IllegalArgumentException("Invalid index.");
     }
   }

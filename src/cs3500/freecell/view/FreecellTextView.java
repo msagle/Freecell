@@ -1,5 +1,7 @@
 package cs3500.freecell.view;
 
+import java.io.IOException;
+
 import cs3500.freecell.model.FreecellModelState;
 
 /**
@@ -7,6 +9,23 @@ import cs3500.freecell.model.FreecellModelState;
  */
 public class FreecellTextView implements FreecellView {
   private FreecellModelState<?> m;
+  private Appendable dest;
+
+  /**
+   * Builds an appendable text view of the given FreecellModel.
+   * This version is used by the controller to display changes in the model state.
+   * @param model the game to translate to text
+   * @param dest place to add new information about the game
+   * @throws IllegalArgumentException if given model is null
+   */
+  public FreecellTextView(FreecellModelState<?> model, Appendable dest) {
+    if (model == null || dest == null) {
+      throw new IllegalArgumentException("Neither the model nor appendable can be null");
+    }
+
+    this.m = model;
+    this.dest = dest;
+  }
 
   /**
    * Builds the text view of the given FreecellModel.
@@ -17,8 +36,24 @@ public class FreecellTextView implements FreecellView {
     if (model == null) {
       throw new IllegalArgumentException("Model cannot be null");
     }
-
     this.m = model;
+  }
+
+  @Override
+  public void renderBoard() throws IOException {
+    if (m == null) {
+      throw new IOException("Invalid model.");
+    }
+    dest.append(this.toString());
+    dest.append("\n");
+  }
+
+  @Override
+  public void renderMessage(String message) throws IOException {
+    if (message == null) {
+      throw new IOException("Invalid message.");
+    }
+    dest.append(message);
   }
 
   @Override

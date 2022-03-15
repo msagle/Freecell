@@ -8,6 +8,8 @@ import java.util.Stack;
 
 /**
  * Contains the data for a playable Freecell game.
+ * Keeps track of the model's state: all of the card piles, the number of each type of pile,
+ * and allows for the movement of ONE card between piles.
  */
 public class SimpleFreecellModel implements FreecellModel<Card> {
   private final int numFP;
@@ -16,7 +18,7 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
 
   private ArrayList<Stack<Card>> foundationPiles;
   private ArrayList<ArrayList<Card>> cascadePiles;
-  private Card [] openPiles;
+  private Card[] openPiles;
 
   /**
    * Builds the Freecell game.
@@ -27,7 +29,7 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
     this.numOP = -1;
     this.foundationPiles = new ArrayList<Stack<Card>>();
   }
-  
+
   @Override
   public List<Card> getDeck() { //creates an unshuffled deck
     //lists of cards, suits, ranks
@@ -35,12 +37,13 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
     ArrayList<Suit> suits = new ArrayList<Suit>(
             Arrays.asList(new Suit(SuitType.HEART), new Suit(SuitType.DIAMOND),
                     new Suit(SuitType.SPADE), new Suit(SuitType.CLUB)));
-    ArrayList<Character> ranks = new ArrayList<Character>(
-            Arrays.asList('A', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'J', 'Q', 'K'));
+    ArrayList<String> ranks = new ArrayList<String>(
+            Arrays.asList("ACE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN",
+                    "EIGHT", "NINE", "TEN", "JACK", "QUEEN", "KING"));
 
     for (int i = 0; i < suits.size(); i = i + 1) { //executes 4 times, once for each suit
       for (int j = 0; j < ranks.size(); j = j + 1) { //executes 13 times, once for each rank
-        cards.add(new Card(ranks.get(j), suits.get(i)));
+        cards.add(new Card(Rank.valueOf(ranks.get(j)), suits.get(i)));
       }
     }
     return cards;
@@ -51,11 +54,9 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
     //checks validity of deck and number of piles
     if (!validDeck(deck)) {
       throw new IllegalArgumentException("Provided deck is invalid.");
-    }
-    else if (numCascadePiles < 4) {
+    } else if (numCascadePiles < 4) {
       throw new IllegalArgumentException("There must be at least 4 cascade piles.");
-    }
-    else if (numOpenPiles < 1) {
+    } else if (numOpenPiles < 1) {
       throw new IllegalArgumentException("There must be at least 1 open piles.");
     }
 
@@ -97,13 +98,10 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
     //checks every single card in list
     for (int i = 0; i < deck.size(); i++) {
       Card c = deck.get(i); //current card
-      if (c.isValidCard()) {  //checks card's validity
-        if (i != 0 && c.inDeck(seen)) { //checks if card is repeated
-          return false;
-        }
-        else {
-          seen.add(c); //adds current card to worklist
-        }
+      if (i != 0 && c.inDeck(seen)) { //checks if card is repeated
+        return false;
+      } else {
+        seen.add(c); //adds current card to worklist
       }
     }
     return true;
@@ -111,19 +109,13 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
 
   /**
    * Deals the deck in round-robin fashion.
+   *
    * @param deck the deck to be dealt
    * @throws IllegalArgumentException if there is an invalid number of cascade piles
    */
   private void dealCascade(List<Card> deck) {
     if (validDeck(deck)) {
       int pileCount = getNumCascadePiles();
-
-      /*
-      if (pileCount < 4) { //checks that there are an appropriate number of cascade piles.
-        throw new IllegalArgumentException(
-                "There must be at least 4 cascade piles.");
-      }
-       */
 
       //creates an empty list for each pile
       for (int i = 0; i < pileCount; i++) {
@@ -159,7 +151,7 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
         moveMe = openPiles[pileNumber];
         break;
       case CASCADE:
-        moveMe = cascadePiles.get(pileNumber).remove(cardIndex);
+        moveMe = cascadePiles.get(pileNumber).get(cardIndex);
         break;
       case FOUNDATION:
         throw new IllegalArgumentException(
@@ -184,7 +176,6 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
         default:
           break;
       }
-
       switch (source) {  //removes moveMe from initial position
         case OPEN:
           openPiles[pileNumber] = null; //cardIndex?
@@ -205,9 +196,10 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
 
   /**
    * Ensures that there exists a card at the given index.
-   * @param source type of card pile
+   *
+   * @param source     type of card pile
    * @param pileNumber index of crad pile
-   * @param cardIndex index of card in pile
+   * @param cardIndex  index of card in pile
    * @return true if the card exists and is at the end of the pile
    * @throws IllegalArgumentException if the given card cannot be moved
    */
@@ -232,9 +224,10 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
 
   /**
    * Determines if the given card can be moved to the given destination.
-   * @param destination card type of destination pile
+   *
+   * @param destination    card type of destination pile
    * @param destPileNumber index of destination pile
-   * @param moveMe card to be moved
+   * @param moveMe         card to be moved
    * @return returns true if the card can be moved
    */
   private boolean canMoveTo(PileType destination, int destPileNumber, Card moveMe) {
@@ -249,8 +242,10 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
         }
         else {
           int sizePile = cascadePiles.get(destPileNumber).size(); //size of dest. pile
+          if (sizePile == 0) { //if cascade empty return true
+            return true;
+          }
           Card last = cascadePiles.get(destPileNumber).get(sizePile - 1); //top card in dest. pile
-
           return (last.isBlackCard() != moveMe.isBlackCard())
                   && (checkOrder(moveMe, last));
         }
@@ -264,14 +259,15 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
 
   /**
    * Ensures that the given card can be added to the given foundation pile.
-   * @param moveMe card to be moved
+   *
+   * @param moveMe         card to be moved
    * @param destPileNumber index of foundation pile
    * @return true if card can be placed at given pile
    * @throws IllegalArgumentException if the card cannot be moved to the intended foundation pile
    */
   private boolean checkAddToFP(Card moveMe, int destPileNumber) {
     //checks card is Ace and destination pile is empty
-    if (moveMe.getRank() == 'A' && foundationPiles.get(destPileNumber).size() == 0) {
+    if (moveMe.getRank() == Rank.ACE && foundationPiles.get(destPileNumber).size() == 0) {
       return true;
     }
     //checks if card is not Ace and destination pile is empty
@@ -283,8 +279,7 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
       Card top = foundationPiles.get(destPileNumber).peek(); //top FP card
       if (checkOrder(top, moveMe) && moveMe.getSuit().equals(top.getSuit())) {
         return true;
-      }
-      else {
+      } else {
         throw new IllegalArgumentException("Illegal move. Cannot move card"
                 + " to the specified index.");
       }
@@ -292,17 +287,19 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
   }
 
   /**
-   * Determines if the cards can be placed on top of eachother numerically.
-   * @param lowRank card that's supposed to have a lower rank
+   * Determines if the cards can be placed on top of each other numerically.
+   *
+   * @param lowRank  card that's supposed to have a lower rank
    * @param highRank card that's supposed to have a higher rank
    * @return true if cards can be stacked
    */
-  private boolean checkOrder(Card lowRank, Card highRank) {
-    ArrayList<Character> rankOrder = new ArrayList<Character>(
-            Arrays.asList('A', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'J', 'Q', 'K'));
+  protected boolean checkOrder(Card lowRank, Card highRank) {
+    ArrayList<String> rankOrder = new ArrayList<String>(
+            Arrays.asList("ACE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN",
+                    "EIGHT", "NINE", "TEN", "JACK", "QUEEN", "KING"));
 
-    int lowRankNum = rankOrder.indexOf(lowRank.getRank());
-    int highRankNum = rankOrder.indexOf(highRank.getRank());
+    int lowRankNum = rankOrder.indexOf(lowRank.getRank().toString());
+    int highRankNum = rankOrder.indexOf(highRank.getRank().toString());
 
     return (lowRankNum == highRankNum - 1);
   }
@@ -322,9 +319,10 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
 
   /**
    * Throws an exception if the game is not in play.
+   *
    * @throws IllegalStateException when the game hasn't started or is over
    */
-  private void throwGameException() {
+  protected void throwGameException() {
     if (getNumCascadePiles() == -1) {
       throw new IllegalStateException("Game has not started yet!");
     }
@@ -332,11 +330,12 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
 
   /**
    * Throws an exception if the given index doesn't exist.
+   *
    * @param numIndices number of possible indices
-   * @param index index to test
+   * @param index      index to test
    * @throws IllegalArgumentException when given an invalid index
    */
-  private void throwIndexException(int numIndices, int index) {
+  protected void throwIndexException(int numIndices, int index) {
     if (index < 0 || index >= numIndices) {
       throw new IllegalArgumentException("Invalid index.");
     }
@@ -372,8 +371,7 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
 
     if (openPiles[index] == null) {
       return 0;
-    }
-    else {
+    } else {
       return 1;
     }
   }
@@ -409,4 +407,15 @@ public class SimpleFreecellModel implements FreecellModel<Card> {
     return openPiles[pileIndex];
   }
 
+  /**
+   * Returns the desired cascade pile.
+   * @param pileIndex cascade pile index
+   * @return cascade pile
+   */
+  protected List<Card> getCascadePile(int pileIndex) {
+    throwGameException();
+    throwIndexException(numCP, pileIndex);
+
+    return cascadePiles.get(pileIndex);
+  }
 }

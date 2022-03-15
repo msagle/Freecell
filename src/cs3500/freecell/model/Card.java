@@ -7,7 +7,7 @@ import java.util.Objects;
  * Represents a Playing Card. Keeps track of rank and suit.
  */
 public class Card {
-  private final char rank;
+  private final Rank rank;
   private final Suit suit;
 
   /**
@@ -16,13 +16,13 @@ public class Card {
    * @param rank rank of card (A-K)
    * @param suit type of card
    */
-  public Card(char rank, Suit suit) {
+  public Card(Rank rank, Suit suit) {
+    if (suit == null || rank == null) {
+      throw new IllegalArgumentException("Suit can not be null!");
+    }
+
     this.rank = rank;
     this.suit = suit;
-
-    if (!this.isValidCard()) {
-      throw new IllegalArgumentException("Invalid card. Make sure rank and suit are valid;");
-    }
   }
 
   /**
@@ -30,7 +30,7 @@ public class Card {
    *
    * @return the rank of the card
    */
-  public char getRank() {
+  public Rank getRank() {
     return this.rank;
   }
 
@@ -50,24 +50,53 @@ public class Card {
    */
   public String toString() {
     String ans = this.rank + this.suit.toString();
+    String r;
 
-    if (this.rank == '0') {
-      return "1" + ans;
+    switch (this.rank) {
+      case ACE:
+        r = "A";
+        break;
+      case TWO:
+        r = "2";
+        break;
+      case THREE:
+        r = "3";
+        break;
+      case FOUR:
+        r = "4";
+        break;
+      case FIVE:
+        r = "5";
+        break;
+      case SIX:
+        r = "6";
+        break;
+      case SEVEN:
+        r = "7";
+        break;
+      case EIGHT:
+        r = "8";
+        break;
+      case NINE:
+        r = "9";
+        break;
+      case TEN:
+        r = "10";
+        break;
+      case JACK:
+        r = "J";
+        break;
+      case QUEEN:
+        r = "Q";
+        break;
+      case KING:
+        r = "K";
+        break;
+      default:
+        r = "";
+        break;
     }
-    else {
-      return ans;
-    }
-  }
-
-  /**
-   * Determines if this card is valid. Card is invalid if its rank doesn't
-   * fall within the traditional A-K specification.
-   *
-   * @return true if the card is valid, false otherwise
-   */
-  protected boolean isValidCard() {
-    return (rank >= '2' && rank <= '9') || rank == '0'
-              || rank == 'J' || rank == 'Q' || rank == 'K' || rank == 'A';
+    return r + this.suit.toString();
   }
 
   /**
@@ -89,7 +118,7 @@ public class Card {
    * Determines if this card is black.
    * @return true if card is black, false if card is red
    */
-  protected boolean isBlackCard() {
+  public boolean isBlackCard() {
     return suit.isBlackCard();
   }
 

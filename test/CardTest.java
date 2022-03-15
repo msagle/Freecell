@@ -1,11 +1,10 @@
-package cs3500.freecell.model;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import cs3500.freecell.model.Card;
+import cs3500.freecell.model.Rank;
+import cs3500.freecell.model.Suit;
+import cs3500.freecell.model.SuitType;
 
 import static org.junit.Assert.assertEquals;
 
@@ -30,20 +29,20 @@ public class CardTest {
     club = new Suit(SuitType.CLUB);
     diamond = new Suit(SuitType.DIAMOND);
 
-    s = new Card('A', spade);
-    h = new Card('0', heart);
-    c = new Card('5', club);
-    d = new Card('Q', diamond);
+    s = new Card(Rank.ACE, spade);
+    h = new Card(Rank.TEN, heart);
+    c = new Card(Rank.FIVE, club);
+    d = new Card(Rank.QUEEN, diamond);
 
     try {
-      new Card('1', diamond);
+      new Card(null, diamond);
     }
     catch (Exception e) {
       new IllegalArgumentException("Invalid card. Make sure rank and suit are valid;");
     }
 
     try {
-      new Card('Z', heart);
+      new Card(Rank.ACE, null);
     }
     catch (Exception e) {
       new IllegalArgumentException("Invalid card. Make sure rank and suit are valid;");
@@ -52,10 +51,10 @@ public class CardTest {
 
   @Test
   public void testGetRank() {
-    assertEquals('A', s.getRank());
-    assertEquals('0', h.getRank());
-    assertEquals('5', c.getRank());
-    assertEquals('Q', d.getRank());
+    assertEquals(Rank.ACE, s.getRank());
+    assertEquals(Rank.TEN, h.getRank());
+    assertEquals(Rank.FIVE, c.getRank());
+    assertEquals(Rank.QUEEN, d.getRank());
   }
 
   @Test
@@ -75,41 +74,6 @@ public class CardTest {
   }
 
   @Test
-  public void testValid() {
-    assertEquals(true, h.isValidCard());
-    assertEquals(true, s.isValidCard());
-    assertEquals(true, d.isValidCard());
-    assertEquals(true, c.isValidCard());
-
-    try {
-      (new Card('H', club)).isValidCard();
-    }
-    catch (Exception e) {
-      new IllegalArgumentException("Invalid card. Make sure rank and suit are valid;");
-    }
-
-  }
-
-  @Test
-  public void testInDeck() {
-    List<Card> list = new ArrayList<Card>(Arrays.asList(s, h, d));
-
-    assertEquals(true, s.inDeck(list));
-    assertEquals(true, h.inDeck(list));
-    assertEquals(true, d.inDeck(list));
-    assertEquals(false, c.inDeck(list));
-
-  }
-
-  @Test
-  public void testBlackCard() {
-    assertEquals(true, s.isBlackCard());
-    assertEquals(false, h.isBlackCard());
-    assertEquals(true, c.isBlackCard());
-    assertEquals(false, d.isBlackCard());
-  }
-
-  @Test
   public void testEquals() {
     assertEquals(false, s.equals(1));
     assertEquals(false, d.equals("str"));
@@ -117,7 +81,7 @@ public class CardTest {
     assertEquals(false, h.equals(s));
     assertEquals(true, c.equals(c));
 
-    Card h2 = new Card('0', heart);
+    Card h2 = new Card(Rank.TEN, heart);
     assertEquals(true, h.equals(h2));
     assertEquals(true, h2.equals(h));
   }
@@ -125,8 +89,8 @@ public class CardTest {
   @Test
   public void testHashcode() {
     assertEquals(h.hashCode(), h.hashCode());
-    assertEquals(h.hashCode(), (new Card('0', heart)).hashCode());
-    assertEquals((new Card('0', heart)).hashCode(), h.hashCode());
+    assertEquals(h.hashCode(), (new Card(Rank.TEN, heart)).hashCode());
+    assertEquals((new Card(Rank.TEN, heart)).hashCode(), h.hashCode());
   }
 
 }

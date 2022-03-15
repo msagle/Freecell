@@ -1,7 +1,8 @@
-package cs3500.freecell.model;
-
 import org.junit.Before;
 import org.junit.Test;
+
+import cs3500.freecell.model.Suit;
+import cs3500.freecell.model.SuitType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
